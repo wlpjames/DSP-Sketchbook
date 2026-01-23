@@ -13,7 +13,7 @@
 DSPSketchbookAudioProcessorEditor::DSPSketchbookAudioProcessorEditor (DSPSketchbookAudioProcessor& p)
 : AudioProcessorEditor (&p)
 , audioProcessor (p)
-, mainPanel(p)
+, mainPanel(p.context)
 {
     setResizable(true, false);
     setSize (500, 750);

@@ -15,12 +15,11 @@
 namespace sketchbook
 {
 //==============================================================================
-template <typename SampleType>
 class ScopeComponent  : public juce::Component,
 private juce::Timer
 {
     public:
-    using Queue = AudioBufferQueue<SampleType>;
+    using Queue = AudioBufferQueue;
     
     enum scopeToShow
     {
@@ -31,7 +30,7 @@ private juce::Timer
     ScopeComponent (Queue& queueToUse)
     : audioBufferQueue (queueToUse)
     {
-        sampleData.fill (SampleType (0));
+        sampleData.fill (0.f);
         setFramesPerSecond (30);
         
         addAndMakeVisible(scopeSwitchButton);
@@ -71,7 +70,7 @@ private juce::Timer
             case osc:
             {
                 g.setColour ({65, 65, 65});
-                plot (sampleData.data(), sampleData.size(), g, scopeRect, SampleType (1), scopeRect.getHeight() / 2);
+                plot (sampleData.data(), sampleData.size(), g, scopeRect, 1.f, scopeRect.getHeight() / 2);
                 break;
             }
                 
@@ -111,22 +110,22 @@ private juce::Timer
         windowFun.multiplyWithWindowingTable (spectrumData.data(), fftSize);
         fft.performFrequencyOnlyForwardTransform (spectrumData.data());
         
-        static constexpr auto mindB = SampleType (-160);
-        static constexpr auto maxdB = SampleType (0);
+        static constexpr auto mindB = -160.f;
+        static constexpr auto maxdB = 0.f;
         
         for (auto& s : spectrumData)
-            s = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels (s) - juce::Decibels::gainToDecibels (SampleType (fftSize))), mindB, maxdB, SampleType (0), SampleType (1));
+            s = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels (s) - juce::Decibels::gainToDecibels (float(fftSize))), mindB, maxdB, 0.f, 1.f);
         
         repaint();
     }
     
     //==============================================================================
-    static void plot (const SampleType* data,
+    static void plot (const float* data,
                       size_t numSamples,
                       juce::Graphics& g,
-                      juce::Rectangle<SampleType> rect,
-                      SampleType scaler = SampleType (1),
-                      SampleType offset = SampleType (0))
+                      juce::Rectangle<float> rect,
+                      float scaler = 1.f,
+                      float offset = 0.f)
     {
         auto w = rect.getWidth();
         auto h = rect.getHeight();
@@ -136,10 +135,10 @@ private juce::Timer
         auto gain = h * scaler;
         
         for (size_t i = 1; i < numSamples; ++i)
-            g.drawLine ({ juce::jmap (SampleType (i - 1), SampleType (0), SampleType (numSamples - 1), SampleType (right - w), SampleType (right)),
-                center - gain * data[i - 1],
-                juce::jmap (SampleType (i), SampleType (0), SampleType (numSamples - 1), SampleType (right - w), SampleType (right)),
-                center - gain * data[i] });
+            g.drawLine ({ juce::jmap (float(i - 1), 0.f, float(numSamples - 1), float(right - w), float(right)),
+                          center - gain * data[i - 1],
+                          juce::jmap (float(i), 0.f, float(numSamples - 1), float(right - w), float(right)),
+                          center - gain * data[i] });
     }
     
     private:
@@ -148,12 +147,12 @@ private juce::Timer
     juce::TextButton scopeSwitchButton;
     
     Queue& audioBufferQueue;
-    std::array<SampleType, Queue::bufferSize> sampleData;
+    std::array<float, Queue::bufferSize> sampleData;
     
     juce::dsp::FFT fft { Queue::order };
-    using WindowFun = juce::dsp::WindowingFunction<SampleType>;
+    using WindowFun = juce::dsp::WindowingFunction<float>;
     WindowFun windowFun { (size_t) fft.getSize(), WindowFun::hann };
-    std::array<SampleType, 2 * Queue::bufferSize> spectrumData;
+    std::array<float, 2 * Queue::bufferSize> spectrumData;
 };
 
 class HeaderComponent : public juce::Component
@@ -272,18 +271,18 @@ class PageMenu : public juce::Component
 class MainPanelComponent : public juce::Component
 {
     public:
-    MainPanelComponent(DSPSketchbookAudioProcessor& p)
+    MainPanelComponent(sketchbook::Context& _context)
     : keyboardComponent(midiKeyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
-    , scopeComponent(p.getAudioBufferQueue())
-    , dspProcessor(p)
+    , scopeComponent(*_context.audioBufferQueue)
+    , context(_context)
     {
         addAndMakeVisible(keyboardComponent);
         addAndMakeVisible(scopeComponent);
         
-        midiKeyboardState.addListener(&p.getMidiMessageCollector());
+        midiKeyboardState.addListener(&context.midiMessageCollector);
         
         addAndMakeVisible(pages);
-        pages.setData(p.audioEngine.getPluginData());
+        pages.setData(context.parameterData);
         
         addAndMakeVisible(pageMenu);
         pageMenu.onSelectionFunc = [sp = SafePointer<MainPanelComponent>(this)] (int index)
@@ -301,7 +300,7 @@ class MainPanelComponent : public juce::Component
     
     ~MainPanelComponent()
     {
-        midiKeyboardState.removeListener(&dspProcessor.getMidiMessageCollector());
+        midiKeyboardState.removeListener(&context.midiMessageCollector);
     }
     
     void resized()
@@ -333,11 +332,11 @@ class MainPanelComponent : public juce::Component
     private:
     juce::MidiKeyboardState midiKeyboardState;
     KeyboardComponent keyboardComponent;
-    ScopeComponent<float> scopeComponent;
+    ScopeComponent scopeComponent;
     sketchbook::Pages pages;
     PageMenu pageMenu;
     HeaderComponent header;
-    DSPSketchbookAudioProcessor& dspProcessor;
+    sketchbook::Context& context;
 };
 
 } //end namespace sketchbook

@@ -197,7 +197,6 @@ class AudioEngine : public sketchbook::VoiceController<VoiceModules, ModulationS
 };
 
 //==============================================================================
-template <typename SampleType>
 class AudioBufferQueue
 {
     public:
@@ -207,7 +206,7 @@ class AudioBufferQueue
     static constexpr size_t numBuffers = 5;
     
     //==============================================================================
-    void push (const SampleType* dataToPush, size_t numSamples)
+    void push (const float* dataToPush, size_t numSamples)
     {
         jassert (numSamples <= bufferSize);
         
@@ -224,7 +223,7 @@ class AudioBufferQueue
     }
     
     //==============================================================================
-    void pop (SampleType* outputBuffer)
+    void pop (float* outputBuffer)
     {
         int start1, size1, start2, size2;
         abstractFifo.prepareToRead (1, start1, size1, start2, size2);
@@ -241,7 +240,7 @@ class AudioBufferQueue
     private:
     //==============================================================================
     juce::AbstractFifo abstractFifo { numBuffers };
-    std::array<std::array<SampleType, bufferSize>, numBuffers> buffers;
+    std::array<std::array<float, bufferSize>, numBuffers> buffers;
 };
 
 //==============================================================================
@@ -250,7 +249,7 @@ class ScopeDataCollector
 {
     public:
     //==============================================================================
-    ScopeDataCollector (AudioBufferQueue<SampleType>& queueToUse)
+    ScopeDataCollector (AudioBufferQueue& queueToUse)
     : audioBufferQueue (queueToUse)
     {}
     
@@ -295,8 +294,8 @@ class ScopeDataCollector
     
     private:
     //==============================================================================
-    AudioBufferQueue<SampleType>& audioBufferQueue;
-    std::array<SampleType, AudioBufferQueue<SampleType>::bufferSize> buffer;
+    AudioBufferQueue& audioBufferQueue;
+    std::array<SampleType, AudioBufferQueue::bufferSize> buffer;
     size_t numCollected;
     SampleType prevSample = SampleType (100);
     

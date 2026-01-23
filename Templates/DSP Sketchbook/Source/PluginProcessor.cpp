@@ -22,6 +22,9 @@ DSPSketchbookAudioProcessor::DSPSketchbookAudioProcessor()
                        )
 #endif
 {
+    //TODO: this should change - not be a pointer
+    context.audioBufferQueue = &audioBufferQueue;
+    context.parameterData = audioEngine.getPluginData();
 }
 
 DSPSketchbookAudioProcessor::~DSPSketchbookAudioProcessor()
@@ -94,7 +97,7 @@ void DSPSketchbookAudioProcessor::changeProgramName (int index, const juce::Stri
 void DSPSketchbookAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     audioEngine.prepare (sampleRate, samplesPerBlock);
-    midiMessageCollector.reset (sampleRate);
+    context.midiMessageCollector.reset (sampleRate);
 }
 
 void DSPSketchbookAudioProcessor::releaseResources()
@@ -133,7 +136,7 @@ void DSPSketchbookAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
 {
     juce::ScopedNoDenormals noDenormals;
 
-    midiMessageCollector.removeNextBlockOfMessages (midiMessages, buffer.getNumSamples());
+    context.midiMessageCollector.removeNextBlockOfMessages (midiMessages, buffer.getNumSamples());
 
     for (int i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear (i, 0, buffer.getNumSamples());

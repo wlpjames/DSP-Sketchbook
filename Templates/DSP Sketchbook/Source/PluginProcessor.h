@@ -53,18 +53,17 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
-    
-    juce::MidiMessageCollector& getMidiMessageCollector() noexcept { return midiMessageCollector; }
-    sketchbook::AudioBufferQueue<float>& getAudioBufferQueue() noexcept { return audioBufferQueue; }
 
     sketchbook::AudioEngine<sketchbook::ModuleList<SimpleOsc>, sketchbook::ModuleList<Convolution/*, Delay<float>, Distortion*/>> audioEngine;
     
 private:
     //==============================================================================
-    juce::MidiMessageCollector midiMessageCollector;
-    sketchbook::AudioBufferQueue<float> audioBufferQueue;
     sketchbook::ScopeDataCollector<float> scopeDataCollector { audioBufferQueue };
     sketchbook::AppLookAndFeel lookAndFeel;
+    sketchbook::AudioBufferQueue audioBufferQueue;
+    
+protected:
+    sketchbook::Context context;
 
     friend class DSPSketchbookAudioProcessorEditor;
     
