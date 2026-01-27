@@ -7,7 +7,7 @@
  BEGIN_JUCE_MODULE_DECLARATION
 
   ID:                 DSP_Sketchbook
-  vendor:          wlpjames
+  vendor:             wlpjames
   version:            0.0.1
   name:               DSP Sketchbook
   description:        A very useful tool for prototyping musical DSP code
@@ -36,14 +36,23 @@
 namespace sketchbook
 {
 class AudioBufferQueue;
+class Module;
 struct Context
 {
     juce::MidiKeyboardState midiKeyboardState;
     juce::ValueTree parameterData;
     juce::MidiMessageCollector midiMessageCollector;
     sketchbook::AudioBufferQueue* audioBufferQueue;
+    
+    //TODO: this is here as a work around to acessing
+    //TODO: unknown templated functions, a beter method should
+    //TODO: probably be found
+    std::function<sketchbook::Module*(juce::String)> getLatestPlayingModuleByName;
 };
 }
+
+//BINARY DATA
+#include "Resources/BinaryData/DSP_SKETCHBOOK_BINARY.h"
 
 //ENGINE
 #include "Engine/Engine.h"
@@ -57,7 +66,9 @@ struct Context
 #include "Modules/SimpleOsc.h"
 
 //APP
-
+#include "App/AppDecl.h"
+#include "App/PluginProcessor.h"
+#include "App/PluginEditor.h"
 
 //UI
 #include "UI/StyledSlider.h"

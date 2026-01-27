@@ -17,7 +17,7 @@ class ModableWidget : juce::ValueTree::Listener
 {
     public:
     
-    ModableWidget(juce::Component* _comp);
+    ModableWidget(juce::Component* _comp, Context& _ctx);
     
     virtual ~ModableWidget();
     
@@ -51,6 +51,7 @@ class ModableWidget : juce::ValueTree::Listener
     bool  shouldDisplay = false;
     float modulatedValue = 1.f;
     bool  isCentered = false;
+    Context& ctx;
 };
 
 class StyledSlider : public juce::Slider, public ModableWidget
@@ -63,8 +64,8 @@ class StyledSlider : public juce::Slider, public ModableWidget
     static const int SLIDER_LABEL_HEIGHT = 12;
     static const int SLIDER_HEIGHT = SLIDER_WIDTH + SLIDER_LABEL_HEIGHT;
     
-    StyledSlider()
-    : ModableWidget(this)
+    StyledSlider(Context& _ctx)
+    : ModableWidget(this, _ctx)
     {
         setSliderStyle(SliderStyle::RotaryHorizontalVerticalDrag);
         setTextBoxStyle(NoTextBox, false, 0, 0);
@@ -81,8 +82,8 @@ class StyledSlider : public juce::Slider, public ModableWidget
 class StyledLinearSlider : public juce::Slider, public ModableWidget
 {
     public:
-    StyledLinearSlider()
-    : ModableWidget(this)
+    StyledLinearSlider(Context& _ctx)
+    : ModableWidget(this, _ctx)
     {
         setSliderStyle(SliderStyle::LinearBar);
         setTextBoxStyle(TextBoxRight, false, 35, 30);

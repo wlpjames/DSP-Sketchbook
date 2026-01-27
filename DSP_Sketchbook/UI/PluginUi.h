@@ -9,7 +9,6 @@
 */
 
 #pragma once
-#include "../../Templates/DSP Sketchbook/Source/PluginProcessor.h"
 #include "ParamaterPages.h"
 
 namespace sketchbook
@@ -274,6 +273,7 @@ class MainPanelComponent : public juce::Component
     MainPanelComponent(sketchbook::Context& _context)
     : keyboardComponent(midiKeyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
     , scopeComponent(*_context.audioBufferQueue)
+    , pages(_context)
     , context(_context)
     {
         addAndMakeVisible(keyboardComponent);

@@ -13,12 +13,13 @@
 #include "../Engine/Module.h"
 
 //TODO: remove access to the main editor
-#include "../../Templates/DSP Sketchbook/Source/PluginEditor.h"
+#include "../App/PluginEditor.h"
 
 namespace sketchbook
 {
-ModableWidget::ModableWidget(juce::Component* _comp)
+ModableWidget::ModableWidget(juce::Component* _comp, sketchbook::Context& _ctx)
 : comp(_comp)
+, ctx(_ctx)
 {}
 
 ModableWidget::~ModableWidget() {}
@@ -47,18 +48,13 @@ void ModableWidget::setDisplayModulation (bool _shouldDisplay)
     
     if (shouldDisplay && !vBlank)
     {
-        vBlank.reset(new juce::VBlankAttachment(comp, [this] (double timestamp)
-                                          {
-            //this is quite slow to do on each callback
-            //TODO: need a method for this without access to the audio process editor
-            if (auto editor = comp->findParentComponentOfClass<DSPSketchbookAudioProcessorEditor>())
+        vBlank.reset(new juce::VBlankAttachment(comp, [this] (double)
+        {
+            if (auto mod = ctx.getLatestPlayingModuleByName(moduleName.toString()))
             {
-                if (auto mod = editor->getLatestPlayingModuleByName(moduleName.toString()))
+                if (auto param = mod->getModifiedParam(paramName))
                 {
-                    if (auto param = mod->getModifiedParam(paramName))
-                    {
-                        setModulationValue(param->getModulatedValue());
-                    }
+                    setModulationValue(param->getModulatedValue());
                 }
             }
             

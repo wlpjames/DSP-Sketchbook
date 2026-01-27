@@ -11,6 +11,9 @@
 #pragma once
 #include "../Engine/Module.h"
 
+namespace sketchbook
+{
+
 class SimpleOsc : public sketchbook::Module
 {
 public:
@@ -111,3 +114,4 @@ private:
     float m_pulseLen = 0;
     float m_gain = 0;
 };
+} // end namespace sketchbook

@@ -19,6 +19,9 @@
 //include our header files
 #include "DSP_Sketchbook.h"
 
+//BINARY DATA
+#include "Resources/BinaryData/DSP_SKETCHBOOK_BINARY.cpp"
+
 //ENGINE
 #include "Engine/Module.cpp"
 #include "Engine/Voices.cpp"
@@ -27,6 +30,10 @@
 //MODULES
 #include "Modules/EnvelopeModule.cpp"
 #include "Modules/ModulationSources.cpp"
+
+//App
+#include "App/PluginEditor.cpp"
+#include "App/PluginProcessor.cpp"
 
 //UI
 #include "UI/LookAndFeel.cpp"

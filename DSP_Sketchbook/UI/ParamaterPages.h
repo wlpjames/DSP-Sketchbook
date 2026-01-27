@@ -9,7 +9,6 @@
 */
 
 #pragma once
-
 #include <JuceHeader.h>
 #include "StyledSlider.h"
 
@@ -41,7 +40,8 @@ class ExpandableListBox : public juce::Viewport
                 titleLabel.setJustificationType(juce::Justification::centredLeft);
                 titleLabel.setText(titleText.replace("_", " "), juce::dontSendNotification);
                 titleLabel.setFont(juce::FontOptions("Andale Mono", 14.f, juce::Font::plain));
-                arrowIcon.reset(juce::Drawable::createFromImageData(BinaryData::arrowdown_svg, BinaryData::arrowdown_svgSize).release());
+                arrowIcon.reset(juce::Drawable::createFromImageData(DSP_SKETCHBOOK_BINARY::arrowdown_svg,
+                                                                    DSP_SKETCHBOOK_BINARY::arrowdown_svgSize).release());
                 animatorUpdater.addAnimator(arrowAnimator);
             }
             
@@ -298,11 +298,6 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
             return output;
         }
         
-        void paint (juce::Graphics& g) override
-        {
-            
-        }
-        
         void resized() override
         {
             auto area = getLocalBounds();
@@ -335,7 +330,8 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
     class ParameterRow : public juce::Component, public juce::ValueTree::Listener
     {
         public:
-        ParameterRow()
+        ParameterRow(Context& ctx)
+        : slider(ctx)
         {
             addAndMakeVisible   (parameterTitleLabel);
             parameterTitleLabel.setJustificationType(juce::Justification::centredLeft);
@@ -550,7 +546,8 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
     class ExpandableModule : public ExpandableListItem
     {
         public:
-        ExpandableModule()
+        ExpandableModule(Context& _ctx)
+        : ctx(_ctx)
         {
             
         }
@@ -596,7 +593,7 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
             
             for (auto row : data.getChildWithName(Module::ParamIdents::PARAMETERS))
             {
-                auto paramRow = new ParameterRow();
+                auto paramRow = new ParameterRow(ctx);
                 paramRow->setData(row);
                 addAndMakeVisible(paramRow);
                 rows.add(paramRow);
@@ -614,9 +611,14 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
         
         juce::Array<juce::Component*> rows;
         juce::ValueTree data;
+        sketchbook::Context& ctx;
     };
     
     public:
+    
+    ModuleGroupPage(Context& _ctx)
+    : ctx(_ctx)
+    {}
     
     void setData(juce::ValueTree newData)
     {
@@ -630,7 +632,7 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
         auto tree = getModulesData(data);
         for (auto sourceData : tree)
         {
-            auto panel = new ExpandableModule();
+            auto panel = new ExpandableModule(ctx);
             panel->setData(sourceData);
             addItem(panel, sourceData[Module::ParamIdents::NAME]);
         }
@@ -642,6 +644,7 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
     private:
     
     juce::ValueTree data;
+    sketchbook::Context& ctx;
 };
 
 class Pages  : public juce::Component
@@ -649,6 +652,10 @@ class Pages  : public juce::Component
     class ParametersPage : public ModuleGroupPage
     {
         public:
+        
+        ParametersPage(Context& _ctx)
+        : ModuleGroupPage(_ctx)
+        {}
         
         juce::ValueTree getModulesData(juce::ValueTree fullData)
         {
@@ -659,6 +666,12 @@ class Pages  : public juce::Component
     
     class ModulationSourcesPage : public ModuleGroupPage
     {
+    public:
+        
+        ModulationSourcesPage(Context& _ctx)
+        : ModuleGroupPage(_ctx)
+        {}
+        
         juce::ValueTree getModulesData(juce::ValueTree fullData) override
         {
             return fullData.getRoot().getChildWithName(Module::ParamIdents::MODULATION_SOURCES);
@@ -667,6 +680,12 @@ class Pages  : public juce::Component
     
     class FXPage : public ModuleGroupPage
     {
+    public:
+        
+        FXPage(Context& _ctx)
+        : ModuleGroupPage(_ctx)
+        {}
+        
         juce::ValueTree getModulesData(juce::ValueTree fullData) override
         {
             return fullData.getRoot().getChildWithName(Module::ParamIdents::EFFECT_FILTERS);
@@ -678,7 +697,8 @@ class Pages  : public juce::Component
         class ModulationRow : public juce::Component, public juce::ValueTree::Listener
         {
             public:
-            ModulationRow()
+            ModulationRow(Context& ctx)
+            : amount(ctx)
             {
                 addAndMakeVisible (reverse);
                 reverse.setButtonText ("Reverse");
@@ -779,7 +799,8 @@ class Pages  : public juce::Component
         };
         
         public:
-        ModulationsPage()
+        ModulationsPage(Context& _ctx)
+        : ctx(_ctx)
         {
             setModel(this);
             setColour(juce::ListBox::ColourIds::backgroundColourId, juce::Colours::white.withAlpha(0.f));
@@ -855,7 +876,7 @@ class Pages  : public juce::Component
             }
             else
             {
-                auto* row = new ModulationRow();
+                auto* row = new ModulationRow(ctx);
                 row->setData(data);
                 addAndMakeVisible (row);
                 return row;
@@ -880,6 +901,7 @@ class Pages  : public juce::Component
         
         private:
         
+        Context& ctx;
         juce::ValueTree data;
         juce::Array<juce::ValueTree> modulationDataList;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ModulationsPage)
@@ -887,7 +909,12 @@ class Pages  : public juce::Component
     
     public:
     
-    Pages()
+    Pages(Context& _ctx)
+    : parametersPage(_ctx)
+    , modulationSourcesPage(_ctx)
+    , modulationsPage(_ctx)
+    , fxPage(_ctx)
+    , ctx(_ctx)
     {
         pageList.add(&parametersPage);
         pageList.add(&modulationsPage);
@@ -946,6 +973,7 @@ class Pages  : public juce::Component
     FXPage fxPage;
     juce::Array<juce::Component*> pageList;
     int selectedPage = 0;
+    Context& ctx;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Pages)
 };
