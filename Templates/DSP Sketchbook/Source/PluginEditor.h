@@ -10,8 +10,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "../../../Source/DSP_Sketchbook.h"
-#include "../../../Source/UI/PluginUi.h"
+#include "../UI/PluginUi.h"
 
 //==============================================================================
 /**

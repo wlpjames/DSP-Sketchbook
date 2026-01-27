@@ -4,10 +4,10 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
   <MAINGROUP id="miUSww" name="DSP Sketchbook">
     <GROUP id="{622A366A-C1F6-45E3-625E-99D96719F9FE}" name="Resources">
-      <FILE id="ERqVhU" name="arrow-down.svg" compile="0" resource="1" file="../../Resources/arrow-down.svg"/>
-      <FILE id="pynATY" name="cassette_recorder.wav" compile="0" resource="1"
-            file="../../Resources/cassette_recorder.wav"/>
-      <FILE id="DCG1jG" name="guitar_amp.wav" compile="0" resource="1" file="../../Resources/guitar_amp.wav"/>
+      <FILE id="MShfAp" name="arrow-down.svg" compile="0" resource="1" file="../../DSP_Sketchbook/Resources/arrow-down.svg"/>
+      <FILE id="SMpydg" name="cassette_recorder.wav" compile="0" resource="1"
+            file="../../DSP_Sketchbook/Resources/cassette_recorder.wav"/>
+      <FILE id="rBPkWn" name="guitar_amp.wav" compile="0" resource="1" file="../../DSP_Sketchbook/Resources/guitar_amp.wav"/>
     </GROUP>
     <GROUP id="{8ECCD0CA-323A-EB45-78AF-98716E4A6A5C}" name="Source">
       <GROUP id="{49E9E4E4-4B1F-94D8-B5B6-137FB9AF7A8E}" name="App"/>
