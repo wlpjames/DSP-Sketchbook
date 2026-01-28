@@ -43,6 +43,10 @@ private juce::Timer
         };
         
         showScope(freq);
+        
+        //init spectrumData to 1.f
+        for (float& v : spectrumData)
+            v = 1.f;
     }
     
     //==============================================================================

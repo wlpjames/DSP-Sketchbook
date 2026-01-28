@@ -61,6 +61,9 @@ struct Context
 
 //MODULES
 #include "Modules/EnvelopeModule.h"
+#include "Modules/Delay.h"
+#include "Modules/Reverb.h"
+
 #include "Modules/FX.h"
 #include "Modules/ModulationSources.h"
 #include "Modules/SimpleOsc.h"

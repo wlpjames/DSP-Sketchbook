@@ -1,3 +1,6 @@
 [submodule "Submodules/JUCE"]
 	path = Submodules/JUCE
 	url = https://github.com/juce-framework/JUCE.git
+[submodule "Submodules/dragonfly-reverb"]
+	path = Submodules/dragonfly-reverb
+	url = https://github.com/wlpjames/dragonfly-reverb.git
