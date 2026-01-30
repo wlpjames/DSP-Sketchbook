@@ -53,23 +53,6 @@
 #include "Modules/DragonFlyReverb/freeverb/zrev.cpp"
 #include "Modules/DragonFlyReverb/freeverb/zrev2.cpp"
 
-/*
-#include "Modules/DragonFlyReverb/freeverb/allpass.cpp"
-#include "Modules/DragonFlyReverb/freeverb/delayline.cpp"
-#include "Modules/DragonFlyReverb/freeverb/comb.cpp"
-#include "Modules/DragonFlyReverb/freeverb/delay.cpp"
-#include "Modules/DragonFlyReverb/freeverb/zrev2.cpp"
-#include "Modules/DragonFlyReverb/freeverb/biquad.cpp"
-//#include"Modules/DragonFlyReverb/freeverb/allpass.cpp"
-//#include"Modules/DragonFlyReverb/freeverb/delayline.cpp"
-//#include"Modules/DragonFlyReverb/freeverb/dccut_f.cpp"
-#include "Modules/DragonFlyReverb/freeverb/revmodel.cpp"
-#include "Modules/DragonFlyReverb/freeverb/revbase.cpp"
-#include "Modules/DragonFlyReverb/freeverb/revbas"
-#include "Modules/DragonFlyReverb/freeverb/efilter.cpp"
-#include "Modules/DragonFlyReverb/freeverb/utils.cpp"
- */
-
 //App
 #include "App/PluginEditor.cpp"
 #include "App/PluginProcessor.cpp"

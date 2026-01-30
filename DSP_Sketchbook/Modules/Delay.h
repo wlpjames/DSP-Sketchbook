@@ -47,13 +47,13 @@ public:
             
             Parameter::Float("Wet", [&] (juce::var value)
             {
-                //TODO: this parameter
+                wetGain = float(value);
                 
             }, 1.f, 0.f, 1.f),
             
             Parameter::Float("Dry", [&] (juce::var value)
             {
-                //TODO: this parameter
+                dryGain = float(value);
                 
             }, 1.f, 0.f, 1.f),
         });
@@ -71,9 +71,10 @@ public:
     }
 
     //==============================================================================
-    void prepareToPlay (float _samplerate, int maxBufferSize) override
+    void prepareToPlay (float _samplerate, int _maxBufferSize) override
     {
         samplerate = _samplerate;
+        wetBuffer.setSize(2, _maxBufferSize);
     }
 
     //==============================================================================
@@ -83,8 +84,11 @@ public:
         const int numChannels = 2;
         jassert(buffer.getNumChannels() == 2);
         
-        float* signalL = buffer.getWritePointer(0);
-        float* signalR = buffer.getWritePointer(1);
+        for (int i = 0; i < 2; i++)
+            wetBuffer.copyFrom(i, 0, buffer, i, 0, buffer.getNumSamples());
+        
+        float* signalL = wetBuffer.getWritePointer(0);
+        float* signalR = wetBuffer.getWritePointer(1);
         
         //calc resampling rate
         float r =  (float(nativeSR) / delayTimeSec) / samplerate;
@@ -109,6 +113,16 @@ public:
         //resample to this sample rate
         writeInterpL.process(((nativeSR / delayTimeSec) / samplerate), inputResizedL, signalL, numSamples, numSamplesToWrite, 0);
         writeInterpR.process(((nativeSR / delayTimeSec) / samplerate), signalR, inputResizedR, numSamplesToWrite, numSamples, 0);
+        
+        //write back to the buffer with a mix of wet and dry
+        for (int i = 0; i < 2; i++)
+        {
+            for (int j = 0; j < numSamples; j++)
+            {
+                buffer.getWritePointer(i)[j] = buffer.getWritePointer(i)[j]    * dryGain
+                                             + wetBuffer.getWritePointer(i)[j] * wetGain;
+            }
+        }
     }
 
     //==============================================================================
@@ -181,8 +195,13 @@ private:
     float decay=0.3f;
     float delayTimeSec = 0.1f;
     
+    float wetGain = 1.f;
+    float dryGain = 1.f;
+    
     //a sensible default value for the samplerate
     float samplerate=44100;
+    
+    juce::AudioBuffer<float> wetBuffer;
     
     //native sample rate is a constant that
     //is used to interpolate input and output signal to
