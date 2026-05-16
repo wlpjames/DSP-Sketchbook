@@ -9,7 +9,6 @@
 */
 
 #pragma once
-#include <JuceHeader.h>
 #include "Slider.h"
 
 //==============================================================================
@@ -43,7 +42,7 @@ class MatrixMenuButton : public juce::TextButton
         
         ~MatrixMenuPopup()
         {
-            for (auto r : rows)
+            for (auto& r : rows)
             {
                 if (r)
                 {
@@ -147,6 +146,7 @@ class MatrixMenuButton : public juce::TextButton
         float m_expandedCornerRadius=3.5;
         float m_animProgress01=0;
         juce::Array<juce::Label*> rows;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MatrixMenuPopup)
     };
     
     public:
@@ -205,6 +205,7 @@ class MatrixMenuButton : public juce::TextButton
     
     private:
     juce::ValueTree data;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MatrixMenuButton)
 };
 
 class OnOffButton : public juce::TextButton
@@ -231,6 +232,8 @@ class OnOffButton : public juce::TextButton
     private:
     juce::String m_onText = "On";
     juce::String m_offText = "Off";
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OnOffButton)
 };
 
 class ExpandableListBox : public juce::Viewport
@@ -239,7 +242,10 @@ class ExpandableListBox : public juce::Viewport
     class ExpandableListItem : public juce::Component
     {
         public:
+        ExpandableListItem() {}
         virtual int getFullHeight()=0;
+        
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExpandableListItem)
     };
     
     class ListItemHolder : public juce::Component
@@ -319,13 +325,15 @@ class ExpandableListBox : public juce::Viewport
                     isOpen = !isOpen;
                 })
                 .build();
+            
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Header)
         };
         
-        ListItemHolder(ExpandableListItem* content, juce::String headerTitle, std::unique_ptr<Header> headerComp = nullptr)
-        : m_content(content)
+        ListItemHolder(std::unique_ptr<ExpandableListItem> content, juce::String headerTitle, std::unique_ptr<Header> headerComp = nullptr)
+        : m_content(std::move(content))
         {
-            jassert(content);
-            addAndMakeVisible(m_content);
+            jassert(m_content);
+            addAndMakeVisible(m_content.get());
             
             if (headerComp)
                 m_header = std::move(headerComp);
@@ -341,8 +349,8 @@ class ExpandableListBox : public juce::Viewport
         void resized() override
         {
             auto area = getLocalBounds();
-            
             m_header->setBounds(area.removeFromTop(ListItemHolder::Header::Height));
+            
             if (m_content)
                 m_content->setBounds(area);
         }
@@ -377,7 +385,7 @@ class ExpandableListBox : public juce::Viewport
         int currentContentHeight = 0;
         
         std::unique_ptr<Header> m_header;
-        ExpandableListItem* m_content = nullptr;
+        std::unique_ptr<ExpandableListItem> m_content = nullptr;
         
         //for dropdown animation
         juce::VBlankAnimatorUpdater animatorUpdater {this};
@@ -397,6 +405,8 @@ class ExpandableListBox : public juce::Viewport
                 isOpen = !isOpen;
             })
             .build();
+        
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ListItemHolder)
     };
     
     class ListHolder : public juce::Component
@@ -410,7 +420,7 @@ class ExpandableListBox : public juce::Viewport
         
         ~ListHolder()
         {
-            for (auto item : m_items)
+            for (auto& item : m_items)
             {
                 if (item)
                 {
@@ -431,9 +441,9 @@ class ExpandableListBox : public juce::Viewport
         }
         
         
-        void addItem(ExpandableListItem* item, juce::String headerText, std::unique_ptr<ExpandableListBox::ListItemHolder::Header> headerComp = nullptr)
+        void addItem(std::unique_ptr<ExpandableListItem> item, juce::String headerText, std::unique_ptr<ExpandableListBox::ListItemHolder::Header> headerComp = nullptr)
         {
-            auto itemHolder = new ListItemHolder(item, headerText, std::move(headerComp));
+            auto itemHolder = new ListItemHolder(std::move(item), headerText, std::move(headerComp));
             m_items.add(itemHolder);
             addAndMakeVisible(itemHolder);
             itemHolder->onSizeChange = [this] ()
@@ -454,6 +464,7 @@ class ExpandableListBox : public juce::Viewport
         
         juce::Array<ListItemHolder*> m_items;
         const int padding = 6;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ListHolder)
     };
     
     ExpandableListBox()
@@ -465,9 +476,9 @@ class ExpandableListBox : public juce::Viewport
         setScrollBarThickness(7);
     }
     
-    void addItem(ExpandableListItem* item, juce::String headerText, std::unique_ptr<ExpandableListBox::ListItemHolder::Header> headerComp = nullptr)
+    void addItem(std::unique_ptr<ExpandableListItem> item, juce::String headerText, std::unique_ptr<ExpandableListBox::ListItemHolder::Header> headerComp = nullptr)
     {
-        listHolder.addItem(item, headerText, std::move(headerComp));
+        listHolder.addItem(std::move(item), headerText, std::move(headerComp));
     }
     
     void resized() override
@@ -476,6 +487,7 @@ class ExpandableListBox : public juce::Viewport
     }
     
     ListHolder listHolder;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExpandableListBox)
 };
 
 class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listener
@@ -574,13 +586,15 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
                     selectedFileLabel.setText(data[Module::ParamIdents::VALUE], juce::dontSendNotification);
                     browserButton.setButtonText("Open File");
                     browserButton.setClickingTogglesState(false);
-                    browserButton.onClick = [this] ()
+                    browserButton.onClick = [sp = SafePointer<ParameterRow>(this)] ()
                     {
+                        if (!sp) return;
+
                         //allow user to choose file
-                        fileChooser = std::make_unique<juce::FileChooser>("Open File", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory));
+                        sp->fileChooser = std::make_unique<juce::FileChooser>("Open File", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory));
                         
                         auto folderChooserFlags = juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::openMode;
-                        fileChooser->launchAsync (folderChooserFlags, [sp = SafePointer<ParameterRow>(this)] (const juce::FileChooser& chooser)
+                        sp->fileChooser->launchAsync (folderChooserFlags, [sp] (const juce::FileChooser& chooser)
                         {
                             if (!sp) return;
                             
@@ -725,6 +739,8 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
         
         MatrixMenuButton addModButton;
         juce::ValueTree data;
+        
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterRow)
     };
     
     class ExpandableModuleHeader : public ExpandableListBox::ListItemHolder::Header, public juce::ValueTree::Listener
@@ -782,6 +798,8 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
     private:
         juce::ValueTree data;
         OnOffButton onOffButton;
+        
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExpandableModuleHeader)
     };
     
     class ExpandableModule : public ExpandableListItem
@@ -795,7 +813,7 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
         
         ~ExpandableModule() override
         {
-            for (auto row : rows)
+            for (auto& row : rows)
             {
                 if (row)
                 {
@@ -844,6 +862,8 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
         juce::Array<juce::Component*> rows;
         juce::ValueTree data;
         sketchbook::Context& ctx;
+        
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExpandableModule)
     };
     
     public:
@@ -866,9 +886,9 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
         {
             auto header = std::make_unique<ExpandableModuleHeader>(sourceData[Module::ParamIdents::NAME].toString());
             header->setData(sourceData);
-            auto panel = new ExpandableModule(ctx);
+            auto panel = std::make_unique<ExpandableModule>(ctx);
             panel->setData(sourceData);
-            addItem(panel, "", std::move(header));
+            addItem(std::move(panel), "", std::move(header));
         }
         resized();
     }
@@ -879,6 +899,8 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
     
     juce::ValueTree data;
     sketchbook::Context& ctx;
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ModuleGroupPage)
 };
 
 class Pages  : public juce::Component
@@ -895,6 +917,8 @@ class Pages  : public juce::Component
         {
             return fullData.getChildWithName(Module::ParamIdents::MODULES);
         }
+        
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParametersPage)
     };
     
     
@@ -910,6 +934,8 @@ class Pages  : public juce::Component
         {
             return fullData.getRoot().getChildWithName(Module::ParamIdents::MODULATION_SOURCES);
         }
+        
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ModulationSourcesPage)
     };
     
     class FXPage : public ModuleGroupPage
@@ -924,6 +950,8 @@ class Pages  : public juce::Component
         {
             return fullData.getRoot().getChildWithName(Module::ParamIdents::EFFECT_FILTERS);
         }
+        
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FXPage)
     };
     
     class ModulationsPage : public juce::ListBox, public juce::ListBoxModel, public juce::ValueTree::Listener
@@ -1166,7 +1194,13 @@ class Pages  : public juce::Component
     
     ~Pages() override
     {
-        
+        for (auto& p : pageList)
+        {
+            if (p)
+            {
+                p = nullptr;
+            }
+        }
     }
     
     void setData(juce::ValueTree newData)
@@ -1203,6 +1237,7 @@ class Pages  : public juce::Component
     ModulationSourcesPage modulationSourcesPage;
     ModulationsPage modulationsPage;
     FXPage fxPage;
+    
     juce::Array<juce::Component*> pageList;
     int selectedPage = 0;
     Context& ctx;

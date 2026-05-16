@@ -28,7 +28,7 @@ void HeaderComponent::resized()
 //---------------------------------------------------------------
 //---------------------------------------------------------------
 
-void PageMenu::MenuButton::paint(juce::Graphics& g) override
+void PageMenu::MenuButton::paint(juce::Graphics& g)
 {
     //just draw text
     g.setColour(Style::getInstance()->themeColour);
@@ -161,6 +161,66 @@ FooterComponent::FooterComponent(Context& ctx, ScopeComponent* scopeComp)
         return;
     };
     
+    addAndMakeVisible(m_saveStateButton);
+    m_saveStateButton.setButtonText("Save");
+    m_saveStateButton.setClickingTogglesState(false);
+    m_saveStateButton.onClick = [sp = SafePointer<FooterComponent>(this)] ()
+    {
+        if (!sp) return;
+        
+        //allow user to choose file
+        sp->fileChooser = std::make_unique<juce::FileChooser>("Save State", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory));
+        
+        auto fileChooserFlags = juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::saveMode;
+        sp->fileChooser->launchAsync (fileChooserFlags, [sp] (const juce::FileChooser& chooser)
+        {
+            if (!sp) return;
+            
+            //get result and check extention
+            juce::File path = chooser.getResult();
+            
+            //chack a path was selected
+            if (path == juce::File())
+                return;
+            
+            //do the actual saving
+            path.create();
+            path.appendText(sp->context.parameterData.toXmlString());
+        });
+    };
+    
+    addAndMakeVisible(m_loadStateButton);
+    m_loadStateButton.setButtonText("Load");
+    m_loadStateButton.setClickingTogglesState(false);
+    m_loadStateButton.onClick = [sp = SafePointer<FooterComponent>(this)] ()
+    {
+        if (!sp) return;
+        
+        //allow user to choose file
+        sp->fileChooser = std::make_unique<juce::FileChooser>("Load State", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory));
+        
+        auto fileChooserFlags = juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::openMode;
+        sp->fileChooser->launchAsync (fileChooserFlags, [sp] (const juce::FileChooser& chooser)
+        {
+            if (!sp) return;
+            
+            //get result and check extention
+            juce::File path = chooser.getResult();
+            
+            //chack a path was selected
+            if (path == juce::File())
+                return;
+            
+            //load
+            juce::FileInputStream stream(path);
+            juce::String xmlString = stream.readEntireStreamAsString();
+            juce::ValueTree valueTree = juce::ValueTree::fromXml(xmlString);
+            
+            if (valueTree.isValid())
+                sketchbook::loadPreviousPluginState(sp->context, valueTree);
+        });
+    };
+    
     //TODO: setup images for this button
     addAndMakeVisible(m_oscDisplayButton);
     m_oscDisplayButton.setButtonStyle(juce::DrawableButton::ImageOnButtonBackground);
@@ -194,11 +254,15 @@ FooterComponent::FooterComponent(Context& ctx, ScopeComponent* scopeComp)
     m_label.setColour(juce::Label::ColourIds::textColourId, Style::getInstance()->themeColour);
 }
 
-void FooterComponent::resized() override
+void FooterComponent::resized()
 {
     auto area = getLocalBounds();
-    int buttonWidth = area.getWidth() / 6.5;
+    int buttonWidth = area.getWidth() / 8;
     m_settingsButton.setBounds(area.removeFromLeft(buttonWidth));
+    area.removeFromLeft(5);
+    m_saveStateButton.setBounds(area.removeFromLeft(buttonWidth));
+    area.removeFromLeft(5);
+    m_loadStateButton.setBounds(area.removeFromLeft(buttonWidth));
     area.removeFromLeft(5);
     m_keyboardButton.setBounds(area.removeFromLeft(buttonWidth));
     area.removeFromLeft(5);
@@ -209,6 +273,20 @@ void FooterComponent::resized() override
 //---------------------------------------------------------------
 //---------------------------------------------------------------
 //---------------------------------------------------------------
+static bool hasModulationSources(juce::ValueTree data)
+{
+    return data.getRoot().getChildWithName(Module::ParamIdents::MODULATION_SOURCES).getNumChildren() > 0;
+}
+
+static bool hasEffectsModules(juce::ValueTree data)
+{
+    return data.getRoot().getChildWithName(Module::ParamIdents::EFFECT_FILTERS).getNumChildren() > 0;
+}
+
+static bool hasVoiceModules(juce::ValueTree data)
+{
+    return data.getRoot().getChildWithName(Module::ParamIdents::MODULES).getNumChildren() > 0;
+}
 
 MainPanelComponent::MainPanelComponent(sketchbook::Context& _context)
 : header(_context)
@@ -224,15 +302,26 @@ MainPanelComponent::MainPanelComponent(sketchbook::Context& _context)
     addAndMakeVisible(pages);
     pages.setData(context.parameterData);
     
+    //construct page names
+    juce::StringArray pageOptions;
+    if (hasVoiceModules(_context.parameterData))
+        pageOptions.add("VOICE");
+    if (hasEffectsModules(_context.parameterData))
+        pageOptions.add("EFFECTS");
+    if (hasModulationSources(_context.parameterData))
+        pageOptions.addArray({"MOD SOURCES", "MATRIX"});
+    
     addAndMakeVisible(pageMenu);
-    pageMenu.onSelectionFunc = [sp = SafePointer<MainPanelComponent>(this)] (int index)
+    pageMenu.onSelectionFunc = [sp = SafePointer<MainPanelComponent>(this), pageOptions] (int index)
     {
         if (!sp)
             return;
         
-        sp->pages.showPage(index);
+        //clumsy remapping of available page names to the full page names
+        const juce::StringArray fullOptionsList = {"VOICE", "EFFECTS", "MOD SOURCES", "MATRIX"};
+        sp->pages.showPage(fullOptionsList.indexOf(pageOptions[index]));
     };
-    pageMenu.addOptions({"VOICE", "EFFECTS", "MOD SOURCES", "MATRIX"});
+    pageMenu.addOptions(pageOptions);
     pageMenu.select(0);
     
     addAndMakeVisible(header);
