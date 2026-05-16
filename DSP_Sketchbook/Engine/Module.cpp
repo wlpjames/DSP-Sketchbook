@@ -32,6 +32,7 @@ const Identifier Module::ParamIdents::VALUE                 = Identifier("VALUE"
 const Identifier Module::ParamIdents::IS_MODABLE            = Identifier("IS_MODABLE");
 const Identifier Module::ParamIdents::MIN                   = Identifier("MIN");
 const Identifier Module::ParamIdents::MAX                   = Identifier("MAX");
+const Identifier Module::ParamIdents::CENTER_SKEW           = Identifier("CENTER_SKEW");
 const Identifier Module::ParamIdents::ENABLED               = Identifier("ENABLED");
 const Identifier Module::ParamIdents::PARAMETER_OPTIONS     = Identifier("OPTIONS");
 
@@ -101,7 +102,7 @@ AudioBuffer<float> RingBuffer::getBuffer()
 }
 
 //float param
-Module::ParameterInternal::ParameterInternal(juce::String name, std::function<void(float)> callback, float _initialValue, float _min, float _max)
+Module::ParameterInternal::ParameterInternal(juce::String name, std::function<void(float)> callback, float _initialValue, float _min, float _max, const std::optional<float> centreSkew)
 : parameterValue(_initialValue)
 , paramName(name)
 , m_min(_min)
@@ -113,6 +114,9 @@ Module::ParameterInternal::ParameterInternal(juce::String name, std::function<vo
         .setProperty(ParamIdents::VALUE, parameterValue, nullptr)
         .setProperty(ParamIdents::MIN, m_min, nullptr)
         .setProperty(ParamIdents::MAX, m_max, nullptr);
+    
+    if (centreSkew.has_value())
+        data.setProperty(ParamIdents::CENTER_SKEW, centreSkew.value(), nullptr);
     
     if (data.isValid())
         data.addListener(this);

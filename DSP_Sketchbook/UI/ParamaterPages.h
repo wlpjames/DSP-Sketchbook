@@ -536,6 +536,9 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
                 case Module::parameterType::floatParam:
                 {
                     slider.setRange(data[Module::ParamIdents::MIN], data[Module::ParamIdents::MAX]);
+                    if (data.hasProperty(Module::ParamIdents::CENTER_SKEW))
+                        slider.setSkewFactorFromMidPoint(data[Module::ParamIdents::CENTER_SKEW]);
+                    
                     slider.setData(data);
                     slider.setValue(data[Module::ParamIdents::VALUE], juce::sendNotification);
                     slider.onValueChange = [this]
@@ -543,6 +546,7 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
                         data.setPropertyExcludingListener(this, Module::ParamIdents::VALUE, slider.getValue(), nullptr);
                         sliderLabel.setText(juce::String(std::round(slider.getValue() * 1000) / 1000), juce::dontSendNotification);
                     };
+                    
                     sliderLabel.setJustificationType(juce::Justification::centred);
                     sliderLabel.setFont(Style::getInstance()->themeFont.withHeight(10));
                     break;

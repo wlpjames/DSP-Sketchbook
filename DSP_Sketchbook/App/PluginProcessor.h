@@ -29,16 +29,9 @@ public:
 
     //==============================================================================
     DSPSketchbookAudioProcessor(juce::String projectName = "")
-    #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
-    #endif
+                       .withInput("Input",  juce::AudioChannelSet::stereo(), true)
+                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
     , m_projectName(projectName)
     {
         //TODO: this should change - not be a pointer
@@ -174,6 +167,7 @@ public:
 
         audioEngine.process(buffer, midiMessages, 0, buffer.getNumSamples());
         scopeDataCollector.process (buffer.getReadPointer (0), (size_t) buffer.getNumSamples());
+        midiMessages.clear();
     }
 
     //==============================================================================
@@ -213,6 +207,7 @@ public:
 
     void setStateInformation (const void* data, int sizeInBytes)
     {
+#if JUCE_DEBUG
         juce::MemoryBlock block(data, sizeInBytes);
         juce::MemoryInputStream stream(block, false);
         juce::String xmlString = stream.readEntireStreamAsString();
@@ -220,6 +215,7 @@ public:
         
         if (valueTree.isValid())
             sketchbook::loadPreviousPluginState(context, valueTree);
+#endif //JUCE_DEBUG
     }
 
     sketchbook::AudioEngine<VoiceModules, FxModules, ModulationSources> audioEngine;

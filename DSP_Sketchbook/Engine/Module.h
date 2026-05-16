@@ -95,7 +95,7 @@ class Module : public juce::ValueTree::Listener
         public:
         
         //Float paramter
-        ParameterInternal(juce::String name, std::function<void(float)> callback, float initialValue, float min, float max);
+        ParameterInternal(juce::String name, std::function<void(float)> callback, float initialValue, float min, float max, const std::optional<float> centreSkew = {});
         
         //int parameter
         ParameterInternal(juce::String name, std::function<void(int)> callback, int initialValue, int min, int max);
@@ -142,9 +142,9 @@ class Module : public juce::ValueTree::Listener
     
     struct Parameter
     {
-        static std::shared_ptr<ParameterInternal> Float(juce::String name, std::function<void(float)> callback, float initialValue, float min, float max)
+        static std::shared_ptr<ParameterInternal> Float(juce::String name, std::function<void(float)> callback, float initialValue, float min, float max, const std::optional<float> centreSkew = {})
         {
-            return std::make_shared<ParameterInternal>(name, callback, initialValue, min, max);
+            return std::make_shared<ParameterInternal>(name, callback, initialValue, min, max, centreSkew);
         }
         
         static std::shared_ptr<ParameterInternal> Integer(juce::String name, std::function<void(int)> callback, int initialValue, int min, int max)
@@ -312,6 +312,7 @@ public:
         static const juce::Identifier IS_MODABLE;
         static const juce::Identifier MIN;
         static const juce::Identifier MAX;
+        static const juce::Identifier CENTER_SKEW;
         static const juce::Identifier ENABLED;
         static const juce::Identifier PARAMETER_OPTIONS;
         
