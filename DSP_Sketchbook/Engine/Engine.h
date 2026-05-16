@@ -52,12 +52,44 @@ public:
         presetData = juce::ValueTree::readFromStream(stream);
     }
     
+    //TODO: how would these be named?
+    juce::String presetName;
     juce::ValueTree presetData;
 };
 
 template <typename... Presets>
 class PresetList
 {
+    juce::StringArray getAllPresetNames()
+    {
+        juce::StringArray output;
+        presets.forEach([&] (auto& preset, auto)
+        {
+            output.add(preset.name);
+        });
+        
+        return output;
+    }
+    
+    juce::ValueTree getPresetByName(juce::String name)
+    {
+        juce::ValueTree output;
+        presets.forEach([&] (auto& preset, auto)
+        {
+            if (preset.name == name)
+                output = preset.presetData;
+        });
+        
+        return output;
+    }
+    
+    template <typename Fn>
+    constexpr void forEach(Fn&& fn)
+    {
+        forEachInTuple(fn, presets);
+    }
+    
+private:
     std::tuple<Presets...> presets;
     
     template <typename Fn, typename Tuple, size_t... Ix>

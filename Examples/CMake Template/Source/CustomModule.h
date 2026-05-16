@@ -137,5 +137,5 @@ using Presets = sketchbook::PresetList</*sketchbook::Preset<binarydata, binaryda
 SKETCHBOOK_DECLARE_APP("Sketchbook Template",
                        VoiceModules,         /* list of modules in voice    */
                        PostProscessEffects,  /* list of post process effects*/
-                       ModulationSources,     /* list of modulation sources  */
+                       ModulationSources,    /* list of modulation sources  */
                        Presets)
