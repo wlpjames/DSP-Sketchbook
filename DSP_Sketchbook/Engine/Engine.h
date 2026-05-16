@@ -174,6 +174,18 @@ class AudioEngine : public sketchbook::VoiceController<VoiceModules, ModulationS
         
         fxChain.forEach([&] (auto& mod, auto)
         {
+            for (auto meta : midiMessages)
+            {
+                auto midi = meta.getMessage();
+                
+                if (midi.isNoteOn())
+                    mod.noteOn({midi, false, juce::MidiMessage()});
+                else if (midi.isNoteOff())
+                    mod.noteOff(false);
+                else
+                    mod.applyMidi(midi);
+            }
+            
             mod.runModulations();
             if (mod.isModuleEnabled())
                 mod.process(buffer);
