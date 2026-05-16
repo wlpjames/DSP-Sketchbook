@@ -185,7 +185,7 @@ class AudioEngine
         sketchbook::VoiceController<VoiceModules, ModulationSources>::prepare(samplerate, blockSize);
         
         fxChain.forEach([&] (auto& mod, auto)
-                        {
+        {
             mod.prepareToPlay(samplerate, blockSize);
         });
     }
