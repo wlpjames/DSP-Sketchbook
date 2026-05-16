@@ -116,7 +116,10 @@ class Voice : public juce::ValueTree::Listener
 {
     public:
     
-    Voice()
+    Voice(SharedModuleDataRegistry& moduleSharedData)
+    : m_moduleSharedData(moduleSharedData)
+    , moduleList(moduleSharedData)
+    , modulationSourceList(moduleSharedData)
     {
         static_assert(is_module_list<Modules>::value,    "Modules must be an instance of ModuleList<...>");
         static_assert(is_module_list<ModSources>::value, "ModSources must be an instance of ModuleList<...>");
@@ -265,15 +268,16 @@ class Voice : public juce::ValueTree::Listener
             {
                 for (int i = startSample; i < startSample + numSamples; i++)
                 {
-                    tmpModBuffer.getWritePointer(0)[i] *= adsrBuffer.getWritePointer(0)[i];
-                    tmpModBuffer.getWritePointer(1)[i] *= adsrBuffer.getWritePointer(0)[i];
+                    float env = adsrBuffer.getWritePointer(0)[i];
+                    tmpBuffer.getWritePointer(0)[i] *= env;
+                    tmpBuffer.getWritePointer(1)[i] *= env;
                 }
             }
             
             for (int i = startSample; i < startSample + numSamples; i++)
             {
-                tmpVoiceBuffer.getWritePointer(0)[i] += tmpModBuffer.getWritePointer(0)[i];
-                tmpVoiceBuffer.getWritePointer(1)[i] += tmpModBuffer.getWritePointer(1)[i];
+                buffer.getWritePointer(0)[i] += tmpBuffer.getWritePointer(0)[i];
+                buffer.getWritePointer(1)[i] += tmpBuffer.getWritePointer(1)[i];
             }
         });
         
@@ -420,6 +424,7 @@ class Voice : public juce::ValueTree::Listener
     juce::AudioBuffer<float> tmpModBuffer;
     juce::AudioBuffer<float> tmpVoiceBuffer;
     
+    SharedModuleDataRegistry& m_moduleSharedData;
     Modules moduleList;
     ModSources modulationSourceList;
     EnvelopeModule voiceEnvelope;
@@ -451,11 +456,11 @@ class VoiceController : public juce::ValueTree::Listener
     
 public:
     
-    VoiceController()
+    VoiceController(SharedModuleDataRegistry& moduleSharedData)
     {
         for (int i = 0; i < numVoices; i++)
         {
-            voices.add(std::make_shared<VoiceType>());
+            voices.add(std::make_shared<VoiceType>(moduleSharedData));
         }
     }
     
@@ -580,7 +585,6 @@ private:
     
     void doNoteOn(juce::MidiMessage message)
     {
-        
         auto glideFromNote = monoNoteHistory.size() > 0 ? monoNoteHistory.back() : juce::MidiMessage();
         monoNoteHistory.push_back(message);
         
