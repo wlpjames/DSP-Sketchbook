@@ -172,6 +172,19 @@ public:
 
         audioEngine.process(buffer, midiMessages, 0, buffer.getNumSamples());
         scopeDataCollector.process (buffer.getReadPointer (0), (size_t) buffer.getNumSamples());
+        
+        //a quick catch for value that will blow speakers/ears
+        for (int i=0; i<buffer.getNumChannels(); i++) {
+            for (int j = 0; j < buffer.getNumSamples(); j++ ) {
+        
+                if (buffer.getWritePointer(i)[j] < -100 || buffer.getWritePointer(i)[j] > 100 || std::isnan( buffer.getWritePointer(i)[j])) {
+                    buffer.clear();
+                    //resetFXModules();
+                    DBG("Bad Value Found and Modules reset");
+                    break;
+                }
+            }
+        }
     }
 
     //==============================================================================
