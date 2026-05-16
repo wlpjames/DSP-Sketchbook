@@ -269,15 +269,15 @@ class Voice : public juce::ValueTree::Listener
                 for (int i = startSample; i < startSample + numSamples; i++)
                 {
                     float env = adsrBuffer.getWritePointer(0)[i];
-                    tmpBuffer.getWritePointer(0)[i] *= env;
-                    tmpBuffer.getWritePointer(1)[i] *= env;
+                    tmpModBuffer.getWritePointer(0)[i] *= env;
+                    tmpModBuffer.getWritePointer(1)[i] *= env;
                 }
             }
             
             for (int i = startSample; i < startSample + numSamples; i++)
             {
-                buffer.getWritePointer(0)[i] += tmpBuffer.getWritePointer(0)[i];
-                buffer.getWritePointer(1)[i] += tmpBuffer.getWritePointer(1)[i];
+                buffer.getWritePointer(0)[i] += tmpModBuffer.getWritePointer(0)[i];
+                buffer.getWritePointer(1)[i] += tmpModBuffer.getWritePointer(1)[i];
             }
         });
         
