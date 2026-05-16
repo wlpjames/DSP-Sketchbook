@@ -204,11 +204,18 @@ class Voice : public juce::ValueTree::Listener
     
     void process(juce::AudioBuffer<float>& buffer, int startSample, int numSamples)
     {
-        if (tmpBuffer.getNumSamples() != buffer.getNumSamples()
-            || tmpBuffer.getNumChannels() != buffer.getNumChannels())
+        if (tmpModBuffer.getNumSamples() != buffer.getNumSamples()
+            || tmpModBuffer.getNumChannels() != buffer.getNumChannels())
         {
-            tmpBuffer.setSize(buffer.getNumChannels(), buffer.getNumSamples());
+            tmpModBuffer.setSize(buffer.getNumChannels(), buffer.getNumSamples());
         }
+        
+        if (tmpVoiceBuffer.getNumSamples() != buffer.getNumSamples()
+            || tmpVoiceBuffer.getNumChannels() != buffer.getNumChannels())
+        {
+            tmpVoiceBuffer.setSize(buffer.getNumChannels(), buffer.getNumSamples());
+        }
+        tmpVoiceBuffer.clear();
         
         float freqHz = portaController.getNextPitch(numSamples);
         
@@ -235,7 +242,8 @@ class Voice : public juce::ValueTree::Listener
         for (int i = startSample; i < startSample + numSamples; i++)
         {
             adsrBuffer.getWritePointer(0)[i] = 1.f;
-            getVoiceADSR()->processSample(adsrBuffer.getWritePointer(0) + i, tmpBuffer.getWritePointer(1) + i);
+            float dummyFloat = 1.f;
+            getVoiceADSR()->processSample(adsrBuffer.getWritePointer(0) + i, &dummyFloat);
         }
         
         //TODO: stereo processing
@@ -245,11 +253,11 @@ class Voice : public juce::ValueTree::Listener
             
             mod.pitchUpdated(freqHz);
             mod.runModulations();
-            tmpBuffer.clear();
+            tmpModBuffer.clear();
             
             for (int i = startSample; i < startSample + numSamples; i++)
             {
-                mod.processSample(tmpBuffer.getWritePointer(0) + i, tmpBuffer.getWritePointer(1) + i);
+                mod.processSample(tmpModBuffer.getWritePointer(0) + i, tmpModBuffer.getWritePointer(1) + i);
             }
             
             //if uses the voice env then apply the voice env
@@ -257,18 +265,26 @@ class Voice : public juce::ValueTree::Listener
             {
                 for (int i = startSample; i < startSample + numSamples; i++)
                 {
-                    tmpBuffer.getWritePointer(0)[i] *= adsrBuffer.getWritePointer(0)[i];
+                    tmpModBuffer.getWritePointer(0)[i] *= adsrBuffer.getWritePointer(0)[i];
+                    tmpModBuffer.getWritePointer(1)[i] *= adsrBuffer.getWritePointer(0)[i];
                 }
             }
             
             for (int i = startSample; i < startSample + numSamples; i++)
             {
-                buffer.getWritePointer(0)[i] += tmpBuffer.getWritePointer(0)[i];
+                tmpVoiceBuffer.getWritePointer(0)[i] += tmpModBuffer.getWritePointer(0)[i];
+                tmpVoiceBuffer.getWritePointer(1)[i] += tmpModBuffer.getWritePointer(1)[i];
             }
         });
         
+        for (int i = startSample; i < startSample + numSamples; i++)
+        {
+            buffer.getWritePointer(0)[i] += tmpVoiceBuffer.getWritePointer(0)[i];
+            buffer.getWritePointer(1)[i] += tmpVoiceBuffer.getWritePointer(1)[i];
+        }
+        
         //if both the adsr and silence detector return true then we can clear the note
-        if (checkVoiceEnvelope() && runSilenceDetector(buffer))
+        if (checkVoiceEnvelope() && runSilenceDetector(tmpVoiceBuffer))
             m_isPlaying = false;
     }
     
@@ -401,7 +417,8 @@ class Voice : public juce::ValueTree::Listener
     //==============================================================================
     juce::HeapBlock<char> heapBlock;
     juce::dsp::AudioBlock<float> tempBlock;
-    juce::AudioBuffer<float> tmpBuffer;
+    juce::AudioBuffer<float> tmpModBuffer;
+    juce::AudioBuffer<float> tmpVoiceBuffer;
     
     Modules moduleList;
     ModSources modulationSourceList;
