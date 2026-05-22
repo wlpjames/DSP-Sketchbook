@@ -618,6 +618,9 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
                 default: break;
             };
             
+            if (data.hasProperty(Module::ParamIdents::UI_ENABLED))
+                setEnabled(data[Module::ParamIdents::UI_ENABLED]);
+            
             setControlVisibilityForParamType();
             parameterTitleLabel.setText (data[Module::ParamIdents::PARAMETER_NAME], juce::dontSendNotification);
             
@@ -626,6 +629,12 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
         
         void valueTreePropertyChanged (juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override
         {
+            if (property == Module::ParamIdents::UI_ENABLED)
+            {
+                setEnabled(data[Module::ParamIdents::UI_ENABLED]);
+                return;
+            }
+            
             if (property != Module::ParamIdents::VALUE) return;
             
             switch (getParamType(data))

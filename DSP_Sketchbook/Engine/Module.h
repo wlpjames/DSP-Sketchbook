@@ -117,6 +117,8 @@ class Module : public juce::ValueTree::Listener
         
         juce::Identifier getName();
         
+        void setEnabled(bool shouldBeEnabled);
+        
         void valueTreePropertyChanged(juce::ValueTree &treeWhosePropertyHasChanged, const juce::Identifier &property) override;
         
         std::function<void(juce::var)> paramChangedCallback;
@@ -261,6 +263,8 @@ public:
     
     void setVoiceMonitorType(VoiceMonitorType type);
     
+    void setParameterEnabled(juce::String paramName, bool shouldBeEnabled);
+    
     bool isModuleEnabled();
     
     VoiceMonitorType getVoiceMonitorType();
@@ -315,6 +319,7 @@ public:
         static const juce::Identifier CENTER_SKEW;
         static const juce::Identifier ENABLED;
         static const juce::Identifier PARAMETER_OPTIONS;
+        static const juce::Identifier UI_ENABLED;
         
         //PARAMETER TYPES
         static const juce::Identifier PARAMETER_FLOAT;

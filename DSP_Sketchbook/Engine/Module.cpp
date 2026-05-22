@@ -35,6 +35,7 @@ const Identifier Module::ParamIdents::MAX                   = Identifier("MAX");
 const Identifier Module::ParamIdents::CENTER_SKEW           = Identifier("CENTER_SKEW");
 const Identifier Module::ParamIdents::ENABLED               = Identifier("ENABLED");
 const Identifier Module::ParamIdents::PARAMETER_OPTIONS     = Identifier("OPTIONS");
+const Identifier Module::ParamIdents::UI_ENABLED            = Identifier("UI_ENABLED");
 
 //MODULATIONS
 const Identifier Module::ParamIdents::MODULATION            = Identifier("MODULEATION");
@@ -123,7 +124,7 @@ Module::ParameterInternal::ParameterInternal(juce::String name, std::function<vo
     
     //send an initial value to the callback
     setValue(data[Module::ParamIdents::VALUE]);
-    paramChangedCallback(getValue());
+    //paramChangedCallback(getValue());
 }
 
 //integer param
@@ -145,7 +146,7 @@ Module::ParameterInternal::ParameterInternal(String name, std::function<void(int
     
     //send an initial value to the callback
     setValue(data[Module::ParamIdents::VALUE]);
-    paramChangedCallback(getValue());
+    //paramChangedCallback(getValue());
 }
 
 //bool parameter
@@ -163,7 +164,7 @@ Module::ParameterInternal::ParameterInternal(String name, std::function<void(boo
     
     //send an initial value to the callback
     setValue(data[Module::ParamIdents::VALUE]);
-    paramChangedCallback(getValue());
+    //paramChangedCallback(getValue());
 }
 
 //choice parameter
@@ -182,7 +183,7 @@ Module::ParameterInternal::ParameterInternal(String name, std::function<void(juc
     
     //send an initial value to the callback
     setValue(data[Module::ParamIdents::VALUE]);
-    paramChangedCallback(getValue());
+    //paramChangedCallback(getValue());
 }
 
 //file Parameter
@@ -199,7 +200,7 @@ Module::ParameterInternal::ParameterInternal(juce::String name, std::function<vo
         data.addListener(this);
     
     setValue(data[Module::ParamIdents::VALUE]);
-    paramChangedCallback(getValue());
+    //paramChangedCallback(getValue());
 }
 
 Module::ParameterInternal::~ParameterInternal()
@@ -220,6 +221,11 @@ var Module::ParameterInternal::getValue()
 Identifier Module::ParameterInternal::getName()
 {
     return paramName;
+}
+
+void Module::ParameterInternal::setEnabled(bool shouldBeEnabled)
+{
+    data.setProperty(ParamIdents::UI_ENABLED, shouldBeEnabled, nullptr);
 }
 
 void Module::ParameterInternal::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property)
@@ -428,6 +434,17 @@ void Module::setVoiceMonitorType(Module::VoiceMonitorType type)
     voiceMonitorType = type;
 }
 
+void Module::setParameterEnabled(juce::String paramName, bool shouldBeEnabled)
+{
+    for (auto p : moduleParameters)
+    {
+        if (p->getName().toString() == paramName)
+        {
+            p->setEnabled(shouldBeEnabled);
+        }
+    }
+}
+
 Module::VoiceMonitorType Module::getVoiceMonitorType()
 {
     return voiceMonitorType;
@@ -543,6 +560,9 @@ void Module::setModuleParameters(Array< std::shared_ptr< Module::ParameterIntern
     {
         modifiedParameters.add(std::make_shared<ModifiedParameter>(p));
     }
+    
+    //send updates to all the parameters that have been added with their default values
+    applyAllParameters();
 }
 
 void Module::applyAllParameters()
