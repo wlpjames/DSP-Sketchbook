@@ -82,7 +82,6 @@ class Module : public juce::ValueTree::Listener
         adsr, silenceDetection
     };
     
-    private:
     class ParameterInternal : public juce::ValueTree::Listener
     {
         juce::var parameterValue;
