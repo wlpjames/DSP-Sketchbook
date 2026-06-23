@@ -493,7 +493,7 @@ class ExpandableListBox : public juce::Viewport
 class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listener
 {
     
-    class ParameterRow : public juce::Component, public juce::ValueTree::Listener
+    class ParameterRow : public juce::Component, public juce::ValueTree::Listener, public juce::Label::Listener
     {
         public:
         ParameterRow(Context& ctx)
@@ -549,6 +549,8 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
                     
                     sliderLabel.setJustificationType(juce::Justification::centred);
                     sliderLabel.setFont(Style::getInstance()->themeFont.withHeight(10));
+                    sliderLabel.setEditable(true);
+                    sliderLabel.addListener(this);
                     break;
                 }
                 case Module::parameterType::intParam:
@@ -677,9 +679,9 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
             
             //centred slider
             const auto sliderRect       = juce::Rectangle<int>(getWidth() / 4, getHeight());
-            const auto sliderLabelRect  = juce::Rectangle<int>(int(getWidth() * 0.11), getHeight());
+            const auto sliderLabelRect  = juce::Rectangle<int>(int(getWidth() * 0.11), getHeight() / 2);
             slider         .setBounds(sliderRect.withCentre(getLocalBounds().getCentre()));
-            sliderLabel    .setBounds(sliderLabelRect.withX(slider.getRight()));
+            sliderLabel    .setBounds(sliderLabelRect.withCentre(sliderRect.getCentre()).withX(slider.getRight()));
             
             //other widgets to the right
             integerStepper .setBounds(juce::Rectangle<int>(area).removeFromRight(w / 1.5).reduced(0, getHeight() * 0.24));
@@ -694,6 +696,12 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
         static const int getRowHeight()
         {
             return 48;
+        }
+        
+        void labelTextChanged(juce::Label* label) override
+        {
+            if (label == &sliderLabel)
+                slider.setValue(sliderLabel.getText().getFloatValue());
         }
         
         private:
