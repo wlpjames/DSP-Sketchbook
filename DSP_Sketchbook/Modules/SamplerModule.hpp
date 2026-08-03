@@ -240,15 +240,26 @@ public:
     {
         if (!m_currSample) return;
         
-        //calc the sample
-        float l = m_currSample->data.getWritePointer(0)[int(m_index)];
-        float r = m_currSample->data.getWritePointer(0)[int(m_index)+1];
-        float frac = m_index - int(m_index);
-        float sample = linearInterp(l, r, frac);
+        float l, r, frac;
         
-        //add to incloming buffer
-        *sampleLeft  += sample;
-        *sampleRight += sample;
+        //calc the sample
+        l = m_currSample->data.getWritePointer(0)[int(m_index)];
+        r = m_currSample->data.getWritePointer(0)[int(m_index)+1];
+        frac = m_index - int(m_index);
+        float sample = linearInterp(l, r, frac);
+        *sampleLeft += sample;
+        
+        if (m_currSample->data.getNumChannels() > 1)
+        {
+            l = m_currSample->data.getWritePointer(1)[int(m_index)];
+            r = m_currSample->data.getWritePointer(1)[int(m_index)+1];
+            *sampleRight += linearInterp(l, r, frac);
+        }
+        else
+        {
+            //add to incloming buffer
+            *sampleRight += sample;
+        }
         
         //no looping so just get rid of the sample
         m_index += m_increment;
