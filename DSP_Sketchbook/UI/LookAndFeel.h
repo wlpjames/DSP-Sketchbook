@@ -67,7 +67,11 @@ class AppLookAndFeel : public juce::LookAndFeel_V4
     
     juce::Slider::SliderLayout getSliderLayout(juce::Slider& slider) override
     {
-        return {slider.getLocalBounds().reduced(2, 0), {}};
+        if (slider.getSliderStyle() == juce::Slider::SliderStyle::IncDecButtons)
+            return {slider.getLocalBounds().withTrimmedLeft(slider.getWidth() / 3),
+                    slider.getLocalBounds().removeFromLeft(slider.getWidth() / 3)};
+        else
+            return {slider.getLocalBounds().reduced(2, 0), {}};
     }
     
     void drawLinearSlider (juce::Graphics& g, int x, int y, int width, int height,

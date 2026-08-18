@@ -555,8 +555,11 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
                 }
                 case Module::parameterType::intParam:
                 {
+                    integerStepper.setIncDecButtonsMode(juce::Slider::incDecButtonsDraggable_AutoDirection);
                     integerStepper.setSliderStyle(juce::Slider::IncDecButtons);
-                    integerStepper.setRange(data[Module::ParamIdents::MIN], data[Module::ParamIdents::MAX]);
+                    integerStepper.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxLeft, true, 100, 35);
+                    integerStepper.setTextBoxIsEditable(false);
+                    integerStepper.setRange(data[Module::ParamIdents::MIN], data[Module::ParamIdents::MAX], 1);
                     integerStepper.setValue(data[Module::ParamIdents::VALUE], juce::sendNotification);
                     integerStepper.onValueChange = [this]
                     {
@@ -684,9 +687,9 @@ class ModuleGroupPage : public ExpandableListBox, public juce::ValueTree::Listen
             sliderLabel    .setBounds(sliderLabelRect.withCentre(sliderRect.getCentre()).withX(slider.getRight()));
             
             //other widgets to the right
-            integerStepper .setBounds(juce::Rectangle<int>(area).removeFromRight(w / 1.5).reduced(0, getHeight() * 0.24));
             toggleButton   .setBounds(juce::Rectangle<int>(area).removeFromRight(w / 1.5).reduced(0, getHeight() * 0.24));
             comboOptions   .setBounds(juce::Rectangle<int>(area).removeFromRight(w / 1.5).reduced(0, getHeight() * 0.24));
+            integerStepper .setBounds(juce::Rectangle<int>(area).removeFromRight(w / 1.5).reduced(0, getHeight() * 0.24));
             
             //file component
             browserButton    .setBounds(area.removeFromRight(w / 1.5).reduced(0, getHeight() * 0.24));
