@@ -58,6 +58,11 @@ void RingBuffer::setSize(int bufferLen)
         writePoint = 0;
 }
 
+int RingBuffer::getSize()
+{
+    return len;
+}
+
 void RingBuffer::appendSingleSample(float sample)
 {
     writePoint += 1;
@@ -86,20 +91,24 @@ AudioBuffer<float>& RingBuffer::getData()
 AudioBuffer<float> RingBuffer::getBuffer()
 {
     AudioBuffer<float> b;
+    mapBufferToData(b);
+    return b;
+}
+
+void RingBuffer::mapBufferToData(AudioBuffer<float>& buffer)
+{
+    jassert(buffer.getNumChannels() == 1 && buffer.getNumSamples() == len);
     
     if (writePoint != 0)
     {
-        b.setSize(1, len);
-        b.clear();
-        b.copyFrom(0, 0, data, 0, writePoint, len - writePoint);
-        b.copyFrom(0, len-(writePoint), data, 0, 0, writePoint);
+        buffer.clear();
+        buffer.copyFrom(0, 0, data, 0, writePoint, len - writePoint);
+        buffer.copyFrom(0, len-(writePoint), data, 0, 0, writePoint);
     }
     else
     {
-        b.makeCopyOf(data);
+        buffer.makeCopyOf(data);
     }
-    
-    return b;
 }
 
 //float param

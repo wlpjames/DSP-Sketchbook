@@ -26,6 +26,7 @@ class RingBuffer
     
     RingBuffer() {}
     void setSize(int bufferLen);
+    int getSize();
     void appendSingleSample(float sample);
     float getLastSample();
     void copyFromBuffer(juce::AudioBuffer<float> &buffer);
@@ -40,8 +41,13 @@ class RingBuffer
      */
     juce::AudioBuffer<float> getBuffer();
     
-    juce::AudioBuffer<float> data;
+    /*
+     returns a linier buffer as if were not a ring buffer
+     takes provided data to avoid realocation
+     */
+    void mapBufferToData(juce::AudioBuffer<float>& buffer);
     
+    juce::AudioBuffer<float> data;
     int writePoint = 0;
     int len = 0;
 };
