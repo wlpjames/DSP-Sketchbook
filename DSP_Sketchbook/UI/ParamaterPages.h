@@ -274,14 +274,15 @@ class ExpandableListBox : public juce::Viewport
             {
                 auto area = getLocalBounds();
                 titleLabel.setBounds(area);
-                arrowIcon->setBounds(area.removeFromRight(Height * 0.9f).removeFromLeft(Height * 0.5));
+                arrowBounds = area.toFloat().removeFromRight(Height * 0.9f).removeFromLeft(Height * 0.5f);
             }
             
             void paint(juce::Graphics& g) override
             {
                 /// experamentaly found pivit point - how should this work?
-                arrowIcon->setTransform(juce::AffineTransform::rotation(arrowAngleRadians, arrowIcon->getWidth() * 0.42f, arrowIcon->getHeight() * 0.2f));
-                arrowIcon->drawWithin(g, arrowIcon->getBounds().toFloat(), juce::RectanglePlacement::centred, 1.0);
+                arrowIcon->setDrawableTransform(juce::AffineTransform::rotation(arrowAngleRadians, arrowIcon->getWidth() * 0.42f, arrowIcon->getHeight() * 0.2f));
+                
+                arrowIcon->drawWithin(g, arrowBounds, juce::RectanglePlacement::centred, 1.f);
             }
             
             void startAnimation()
@@ -294,9 +295,9 @@ class ExpandableListBox : public juce::Viewport
                 return titleLabel;
             }
             
-            juce::Component& getArrowComp()
+            const juce::Rectangle<float>& getArrowBounds()
             {
-                return *arrowIcon.get();
+                return arrowBounds;
             }
             
             static const int Height = 40;
@@ -305,6 +306,7 @@ class ExpandableListBox : public juce::Viewport
             
             juce::Label titleLabel;
             std::unique_ptr<juce::Drawable> arrowIcon;
+            juce::Rectangle<float> arrowBounds;
             
             //for dropdown animation
             float arrowAngleRadians = 0.0f;
@@ -364,7 +366,7 @@ class ExpandableListBox : public juce::Viewport
         {
             if (event.eventComponent == m_header.get()
                 || event.eventComponent == &m_header->getTitleComp()
-                || event.eventComponent == &m_header->getArrowComp())
+                || m_header->getArrowBounds().contains(event.getPosition().toFloat()))
             {
                 dropDownAnimator.start();
                 m_header->startAnimation();

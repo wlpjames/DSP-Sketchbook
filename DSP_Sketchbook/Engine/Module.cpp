@@ -92,7 +92,7 @@ AudioBuffer<float> RingBuffer::getBuffer()
         b.setSize(1, len);
         b.clear();
         b.copyFrom(0, 0, data, 0, writePoint, len - writePoint);
-        b.copyFrom(0, len-(writePoint+1), data, 0, 0, writePoint);
+        b.copyFrom(0, len-(writePoint), data, 0, 0, writePoint);
     }
     else
     {
